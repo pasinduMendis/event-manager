@@ -1,7 +1,9 @@
 ## Event Manager
+
 ## technology and enviorenmet
  technology: nodeJs with Ts (node environment), \
  database : MongoDB\
+
 ## commands
 
  commands => \
