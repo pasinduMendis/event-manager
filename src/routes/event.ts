@@ -1,5 +1,4 @@
 import express, { Application, Request, Response } from "express";
-import { title } from "process";
 const eventRoutes = express.Router();
 const Event = require("../schema/eventSchema");
 
@@ -18,9 +17,7 @@ eventRoutes.post("/add", async (req: Request, res: Response) => {
     endTime: endMilliseconds,
     participant: participant,
   });
-  newEvent.save().catch((err: Error) => {
-    res.send(err);
-  });
+  newEvent.save()
   res.json("successfully added");
   return 0;
 });
@@ -29,18 +26,24 @@ eventRoutes.post("/add", async (req: Request, res: Response) => {
 eventRoutes.get("/", async (req: Request, res: Response) => {
   const events = await Event.find({}).catch((err: Error) => {
     res.send(err);
+    return 0;
   });
   res.send(events);
+  return 0;
 });
 
 //update event
-eventRoutes.put("/upadateEvent/:id", async (req: Request, res: Response) => {
+eventRoutes.put("/updateEvent/:id", async (req: Request, res: Response) => {
   if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
     res.send("invalid id");
+    return 0;
   }
 
   const event = await Event.findOne({
     _id: req.params.id,
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   if (!event) {
     res.send("no event found");
@@ -64,18 +67,27 @@ eventRoutes.put("/upadateEvent/:id", async (req: Request, res: Response) => {
     }
   ).catch((err: Error) => {
     res.send(err);
+    return 0;
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   res.send("successfully updated");
+  return 0;
 });
 
 //delete event
 eventRoutes.delete("/deleteEvent/:id", async (req: Request, res: Response) => {
   if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
     res.send("invalid id");
+    return 0;
   }
 
   const event = await Event.findOne({
     _id: req.params.id,
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   if (!event) {
     res.send("no event found");
@@ -83,22 +95,31 @@ eventRoutes.delete("/deleteEvent/:id", async (req: Request, res: Response) => {
   }
   await Event.deleteMany({
     _id: req.params.id,
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   res.send("successfully deleted");
+  return 0;
 });
 
 //add participant to event
-eventRoutes.put("/add-paricipants", async (req: Request, res: Response) => {
+eventRoutes.put("/addParticipants", async (req: Request, res: Response) => {
   const { event_id, participant } = req.body;
   if (!event_id) {
     res.send("event_id must needed in the body");
+    return 0;
   }
   if (!event_id.match(/^[0-9a-fA-F]{24}$/)) {
     res.send("invalid event id");
+    return 0;
   }
 
   const event = await Event.findOne({
     _id: event_id,
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   if (!event) {
     res.send("no event found");
@@ -116,6 +137,7 @@ eventRoutes.put("/add-paricipants", async (req: Request, res: Response) => {
     event.participant.forEach((object: ObjectParticipant) => {
       if (object.user_id == value.user_id) {
         res.send(`failed.user_id=${value.user_id} is already added.`);
+        return 0;
       }
     });
   });
@@ -127,22 +149,28 @@ eventRoutes.put("/add-paricipants", async (req: Request, res: Response) => {
     { $addToSet: { participant: { $each: req.body.participant } } }
   ).catch((err: Error) => {
     res.send(err);
+    return 0;
   });
   res.send("successfully added.");
+  return 0;
 });
 
 //remove participant to event
-eventRoutes.delete("/remove-paricipants", async (req: Request, res: Response) => {
+eventRoutes.delete("/removeParticipants", async (req: Request, res: Response) => {
   const { event_id, participant } = req.body;
   if (!event_id) {
     res.send("event_id must needed in the body");
   }
   if (!event_id.match(/^[0-9a-fA-F]{24}$/)) {
     res.send("invalid event id");
+    return 0;
   }
 
   const event = await Event.findOne({
     _id: event_id,
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   if (!event) {
     res.send("no event found");
@@ -169,23 +197,30 @@ eventRoutes.delete("/remove-paricipants", async (req: Request, res: Response) =>
     { $pull: { participant: { user_id:{ $in: participant } } } } 
   ).catch((err: Error) => {
     res.send(err);
+    return 0;
   });
   res.send("successfully removed.");
+  return 0;
 });
 
 
 //accept participate
-eventRoutes.put("/update-accept", async (req: Request, res: Response) => {
+eventRoutes.put("/updateAcceptParticipate", async (req: Request, res: Response) => {
   const { event_id, user_id,accept_status } = req.body;
   if (!event_id) {
     res.send("event_id must needed in the body");
+    return 0;
   }
   if (!event_id.match(/^[0-9a-fA-F]{24}$/)) {
     res.send("invalid event id");
+    return 0;
   }
 
   const event = await Event.findOne({
     _id: event_id,
+  }).catch((err: Error) => {
+    res.send(err);
+    return 0;
   });
   if (!event) {
     res.send("no event found");
@@ -195,7 +230,10 @@ eventRoutes.put("/update-accept", async (req: Request, res: Response) => {
     {
       _id: event_id,"participant.user_id":user_id,
     }
-  );
+  ).catch((err: Error) => {
+    res.send(err);
+    return 0;
+  });
 
   if (!userExist) {
     res.send("this user isn't exist in givent event.");
@@ -209,32 +247,42 @@ eventRoutes.put("/update-accept", async (req: Request, res: Response) => {
     { $set: { "participant.$.accept_status" : accept_status } } 
   ).catch((err: Error) => {
     res.send(err);
+    return 0;
   });
   res.send("successfully updated");
+  return 0;
 });
 
 
 //get all event for relevant host
-eventRoutes.get("/host-event/:id", async (req: Request, res: Response) => {
+eventRoutes.get("/hostEvent/:id", async (req: Request, res: Response) => {
   
   const events = await Event.find(
     {
       participant : { $elemMatch : { isHost : true , user_id:req.params.id } }
     }
-  );
+  ).catch((err: Error) => {
+    res.send(err);
+    return 0;
+  });
   res.send(events)
+  return 0;
 
 })
 
 //get all event for relevant user
-eventRoutes.get("/user-event/:id", async (req: Request, res: Response) => {
+eventRoutes.get("/userEvent/:id", async (req: Request, res: Response) => {
   
   const events = await Event.find(
     {
       "participant.user_id":req.params.id,
     }
-  );
+  ).catch((err: Error) => {
+    res.send(err);
+    return 0;
+  });
   res.send(events)
+  return 0;
 
 })
 

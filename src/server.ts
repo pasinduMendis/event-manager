@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
 const EventRoutes = require("./routes/event");
+const UserRoutes = require("./routes/userRoute")
 require("dotenv").config();
 
 const app: Application = express();
@@ -31,6 +32,7 @@ const PORT: String = process.env.POPRT || "5000";
     res.send("welcome to Event Management");
   });
   app.use("/event", EventRoutes);
+  app.use("/user", UserRoutes);
 
   app.listen(PORT, function () {
     console.log("saver is running on :", PORT);
